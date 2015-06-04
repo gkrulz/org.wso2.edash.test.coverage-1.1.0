@@ -1,15 +1,24 @@
 package org.wso2.edash.test.coverage.invoke;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.drive.DriveScopes;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.spreadsheet.ListEntry;
 import com.google.gdata.data.spreadsheet.ListFeed;
-import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
 import org.apache.log4j.Logger;
 import org.wso2.edash.test.coverage.model.Product;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -24,7 +33,7 @@ public class TestCoverageGoogleDocReader {
 	/**
 	 * Overridden constructor
 	 */
-	public TestCoverageGoogleDocReader() throws IOException, AuthenticationException {
+	public TestCoverageGoogleDocReader() throws IOException, GeneralSecurityException {
 		properties = new Properties();
 		properties.load(TestCoverageGoogleDocReader.class.getClassLoader()
 		                                .getResourceAsStream("test_coverage_constants.properties"));
@@ -100,13 +109,24 @@ public class TestCoverageGoogleDocReader {
 	/**
 	 * Method to authenticate with the google doc
 	 */
-	private void authenticate() throws AuthenticationException {
+	private void authenticate() throws GeneralSecurityException, IOException {
 		//get properties from test_coverage_constants.properties file
 		String username = properties.getProperty("USERNAME");
-		String password = properties.getProperty("PASSWORD");
 
-		service = new SpreadsheetService("MySpreadsheetIntegration-v1");
-		service.setUserCredentials(username, password);
+		String emailAddress = properties.getProperty("EMAIL_ADDRESS");
+		JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+		HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+		GoogleCredential credential = new GoogleCredential.Builder()
+				.setTransport(httpTransport)
+				.setJsonFactory(JSON_FACTORY)
+				.setServiceAccountId(emailAddress)
+				.setServiceAccountPrivateKeyFromP12File(new File(
+						System.getProperty("user.dir") + "/properties/wso2_edash.p12"))
+				.setServiceAccountScopes(Collections.singleton(DriveScopes.DRIVE))
+				.setServiceAccountUser(username)
+				.build();
+
+		service = new SpreadsheetService("edashSpreadsheetService-v1");
+		service.setOAuth2Credentials(credential);
 	}
-
 }

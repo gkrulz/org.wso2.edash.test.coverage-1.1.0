@@ -1,6 +1,5 @@
 package org.wso2.edash.test.coverage;
 
-import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -10,6 +9,7 @@ import org.wso2.edash.test.coverage.model.Product;
 import org.wso2.edash.test.coverage.model.ProductDaoImpl;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -40,8 +40,8 @@ public class TestCoverageProcessor {
 
 		try {
 			testCoverageGoogleDocReader = new TestCoverageGoogleDocReader();
-		} catch (AuthenticationException | IOException e) {
-			log.error("Failed to authenticate", e);
+		} catch (IOException | GeneralSecurityException e) {
+			log.error("Failed to Authenticate to google spreadsheets", e);
 		}
 
 		//get the product test coverage data
